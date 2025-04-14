@@ -1,0 +1,107 @@
+from flask import Flask, render_template, jsonify
+import pandas as pd
+import numpy as np
+from utils.earth_engine import initialize_earth_engine, get_landsat_collection
+from utils.data_processing import process_landsat_data, calculate_statistics
+#from utils.visualization import create_map, create_spatial_heatmap #These are not used in the edited code.
+#from utils.data_loader import load_lst_data, load_ndvi_data #These are not used in the edited code.
+import os
+import json
+from datetime import datetime
+import ee
+
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return """
+    <h1>Landsat Satellite Data Analysis Dashboard</h1>
+    <p>Available endpoints:</p>
+    <ul>
+        <li>/data/lst - Get LST data</li>
+        <li>/data/ndvi - Get NDVI data</li>
+        <li>/stats - Get statistics</li>
+    </ul>
+    """
+
+@app.route('/data/lst')
+def get_lst_data():
+    try:
+        # Initialize Earth Engine
+        ee_initialized = initialize_earth_engine()
+        if ee_initialized:
+            # Get Landsat collection for 2024, April, Daytime.  Hardcoded for simplicity as per edited code.
+            collection = get_landsat_collection(2024, 4, "Daytime")
+
+            # Process data for Chennai. Hardcoded for simplicity as per edited code.
+            data_layer, region = process_landsat_data(collection, "Chennai", "LST", "Daytime")
+
+            # Calculate statistics
+            stats = calculate_statistics(data_layer, region)
+
+            return jsonify({
+                "status": "success",
+                "data": stats
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Earth Engine initialization failed"
+            })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
+
+@app.route('/data/ndvi')
+def get_ndvi_data():
+    try:
+        # Initialize Earth Engine
+        ee_initialized = initialize_earth_engine()
+        if ee_initialized:
+            # Get Landsat collection for 2024, April. Hardcoded for simplicity as per edited code.
+            collection = get_landsat_collection(2024, 4, "Daytime")
+
+            # Process data for Chennai. Hardcoded for simplicity as per edited code.
+            data_layer, region = process_landsat_data(collection, "Chennai", "NDVI")
+
+            # Calculate statistics
+            stats = calculate_statistics(data_layer, region)
+
+            return jsonify({
+                "status": "success",
+                "data": stats
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Earth Engine initialization failed"
+            })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
+
+@app.route('/stats')
+def get_statistics():
+    # Sample statistics for demonstration
+    return jsonify({
+        "lst": {
+            "min": 28.2,
+            "max": 39.8,
+            "mean": 33.5,
+            "stdDev": 2.1
+        },
+        "ndvi": {
+            "min": 0.124,
+            "max": 0.812,
+            "mean": 0.547,
+            "stdDev": 0.156
+        }
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
