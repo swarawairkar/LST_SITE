@@ -1,0 +1,12 @@
+
+[project]
+name = "landsat-analysis"
+version = "0.1.0"
+description = "Landsat Satellite Data Analysis Dashboard"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.0.0",
+    "earthengine-api>=1.5.9",
+    "plotly>=6.0.1",
+    "pandas>=2.2.3",
+    "numpy>=2.2.4",
